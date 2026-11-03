@@ -23,6 +23,23 @@ from . import __version__
 from .store import Clip, Store, default_db_path
 
 
+def force_utf8_stdio() -> None:
+    """把 stdout/stderr 切到 UTF-8。
+
+    Windows 上输出被重定向（管道、文件、CI 日志）时，Python 会用系统 ANSI 代码页
+    （cp1252 / cp936）编码，打印中文或 ``✓`` 这类字符会直接抛 ``UnicodeEncodeError``。
+    控制台本身走 WriteConsoleW，在这里把编码固定成 UTF-8 不会造成乱码。
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:  # pragma: no cover - 被替换成非 TextIOWrapper 的流
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):  # pragma: no cover - 极少数不可重配的流
+            pass
+
+
 def human_age(timestamp: Optional[float], *, now: Optional[float] = None) -> str:
     """把时间戳渲染成 ``3m`` / ``2h`` / ``5d`` 这样的短形式。"""
     if not timestamp:
@@ -266,6 +283,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    force_utf8_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "func", None):

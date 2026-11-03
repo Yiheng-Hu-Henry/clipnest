@@ -13,8 +13,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["3.9", "3.11", "3.13"]
+        # 用显式 include 而不是 os × python-version 的笛卡尔积：
+        # ubuntu-latest 已经是 26.04，官方 Python 清单里没有 3.9（2025-10 已 EOL），
+        # 所以「声明的最低版本」固定在 ubuntu-22.04 上继续验证，其余组合跟随 latest。
+        include:
+          - os: ubuntu-22.04
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.9"
+          - os: windows-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,5 +47,24 @@ jobs:
         run: |
           python -m clipnest --version
           python -m clipnest add "https://example.com"
+          python -m clipnest add "带中文的剪贴内容 ✓"
           python -m clipnest list
           python -m clipnest stats
+      - name: CLI smoke test (redirected output)
+        shell: bash
+        # 回归保护：Windows 上 stdout 被重定向到文件/管道时会退化成系统 ANSI 代码页
+        # （cp1252 / cp936），中文和 ✓ 会直接抛 UnicodeEncodeError。
+        # 这一步专门盯住那条路径。
+        run: |
+          python -m clipnest list > cli_out.txt
+          python -m clipnest stats >> cli_out.txt
+          # 校验脚本本身只做断言，单独给 UTF-8，避免它自己的报错信息也撞上代码页；
+          # 上面两行故意不加任何编码环境变量，才能真守住回归。
+          PYTHONIOENCODING=utf-8 python - <<'PY'
+          from pathlib import Path
+          text = Path("cli_out.txt").read_text(encoding="utf-8")
+          assert "\ufffd" not in text, "输出里出现替换字符，说明编码没修好"
+          assert "PREVIEW" in text, "没读到 list 的表头，输出可能被吞了"
+          assert "剪贴内容" in text, "中文没完整落盘"
+          print(f"重定向输出正常，{len(text)} 字符按 UTF-8 解码通过")
+          PY
