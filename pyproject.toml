@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clipnest"
+version = "0.1.0"
+description = "零依赖的 Windows 剪贴板历史管理器：SQLite 存储、敏感内容自动跳过、本地 Web 界面"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Yiheng Hu" }]
+keywords = ["clipboard", "clipboard-manager", "history", "windows", "sqlite"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Desktop Environment",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+clipnest = "clipnest.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Yiheng-Hu-Henry/clipnest"
+Issues = "https://github.com/Yiheng-Hu-Henry/clipnest/issues"
+
+[tool.setuptools]
+packages = ["clipnest"]
+
+[tool.setuptools.package-data]
+clipnest = ["webui.html"]

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# 测试与工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 本地数据（别把历史记录提交上去）
+*.db
+*.db-wal
+*.db-shm
+.clipnest/
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
